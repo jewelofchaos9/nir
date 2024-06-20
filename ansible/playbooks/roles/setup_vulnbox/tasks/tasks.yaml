@@ -1,0 +1,67 @@
+- name: Create vulnboxes dir
+  ansible.builtin.file:
+    path: /root/vulnboxes
+    state: directory
+    owner: root
+
+- name: Update and upgrade system packages
+  apt:
+    update_cache: yes
+    update_cache: yes
+    cache_valid_time: 86400
+  
+- name: Install basic things
+  apt: name={{item}}
+  with_items:
+    - python3
+    - git
+    - docker.io
+    - docker-compose
+    - auditd
+
+- name: Install and enable auditd
+  systemd:
+    name: auditd
+    state: started
+    enabled: true
+
+- name: Configure auditd standart rules
+  copy:
+    dest: /etc/audit/rules.d/audit.rules
+    mode: 0644
+    src: audit.rules
+
+- name: Restart auditd lol
+  systemd:
+    name: auditd
+    state: restarted
+
+
+- name: Create NodeExporter
+  docker_container:
+    name: node-exporter
+    restart_policy: always
+    image: prom/node-exporter:{{ node_exporter_version }}
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command: >
+      --path.procfs=/host/proc
+      --path.rootfs=/rootfs
+      --path.sysfs=/host/sys
+      --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    published_ports: "9100:9100"
+
+- name: Create cAdvisor
+  docker_container:
+    name: cadvisor
+    restart_policy: always
+    image: gcr.io/cadvisor/cadvisor:{{ cadvisor_version }}
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    published_ports: "9101:8080"

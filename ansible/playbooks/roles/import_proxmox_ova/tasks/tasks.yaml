@@ -1,0 +1,33 @@
+- name: Create vulnboxes dir
+  ansible.builtin.file:
+    path: /root/vulnboxes
+    state: directory
+    owner: root
+
+- name: Create vulnbox dir
+  ansible.builtin.file:
+    path: '/root/vulnboxes/{{vulnbox_name}}'
+    state: directory
+    owner: root
+
+- name: Load ova to proxmox
+  ansible.builtin.copy:
+    src: '{{ vulnbox_path }}'
+    dest: '/root/vulnboxes/{{vulnbox_name}}'
+    mode: '0777'
+
+- name: Load vm importing script
+  ansible.builtin.copy:
+    src: '{{ playbook_dir }}/importing_script.sh'
+    dest: '/root/vulnboxes/{{vulnbox_name}}/importing_script.sh'
+    mode: '0777'
+
+- name: Unpack vulnbox
+  shell:
+    chdir: '/root/vulnboxes/{{ vulnbox_name }}'
+    cmd: tar xvf *.ova
+
+- name: Import vulnbox to proxmox
+  shell:
+    chdir: '/root/vulnboxes/{{ vulnbox_name }}'
+    cmd: bash importing_script.sh

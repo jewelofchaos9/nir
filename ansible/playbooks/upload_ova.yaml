@@ -1,0 +1,7 @@
+---
+
+- name: Upload vulnboxes
+  hosts: proxmox
+  roles:
+    - name: Import OVA file
+      role: import_proxmox_ova

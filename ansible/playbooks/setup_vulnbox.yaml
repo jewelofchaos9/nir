@@ -1,0 +1,7 @@
+---
+
+- name: Setup Vulnbox
+  hosts: vulnboxes
+  roles:
+    - name: Setup vulnbox
+      role: setup_vulnbox

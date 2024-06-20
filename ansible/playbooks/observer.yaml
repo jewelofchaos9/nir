@@ -1,0 +1,5 @@
+- name: Setup observer
+  hosts: observer
+  roles:
+    - name: observer
+      role: observer
